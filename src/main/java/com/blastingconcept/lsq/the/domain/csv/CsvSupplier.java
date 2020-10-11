@@ -13,7 +13,7 @@ public class CsvSupplier {
 
     private String supplierId;
 
-    private String InvoiceId;
+    private String invoiceId;
 
     private Date invoiceDate;
 

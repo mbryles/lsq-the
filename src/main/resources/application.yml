@@ -1,22 +1,16 @@
-lsq:
-    the:
-        api:
-            uploadDirectory: files/csv
-
 spring:
+    servlet:
+        multipart:
+            enabled: true
+            max-file-size: 2MB
+            max-request-size: 2MB
     jpa:
         hibernate:
             dialect: org.hibernate.dialect.MySQL5InnoDBDialect
             ddl-auto: create
     datasource:
         url: jdbc:mysql://localhost:3306/lsq?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=America/New_York
-        username: root
+        username: the
         password: secretsecret
         driver-class-name: com.mysql.jdbc.Driver
-    #    data: testdata.sql
         platform:
-    #    name: testdb
-    #    initialization-mode: embedded
-    #test:
-    #    database:
-    #        replace: none

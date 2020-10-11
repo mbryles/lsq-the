@@ -1,4 +1,4 @@
-package com.blastingconcept.lsq.the.domain.supplier;
+package com.blastingconcept.lsq.the.domain.csv;
 
 import lombok.*;
 
@@ -24,4 +24,6 @@ public class Supplier {
     private Date paymentDate;
 
     private Float paymentAmount;
+
+    private InvoiceState invoiceState;
 }

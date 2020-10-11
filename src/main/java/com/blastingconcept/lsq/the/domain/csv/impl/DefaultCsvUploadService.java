@@ -58,15 +58,41 @@ public class DefaultCsvUploadService implements CsvUploadService {
 
             for (CSVRecord csvRecord : csvRecords) {
 
+                String invoiceAmount = csvRecord.get("Invoice Amount");
+                float invoiceAmt = 0.0f;
+                if(invoiceAmount != null && ! invoiceAmount.isEmpty()) {
+                    invoiceAmt = Float.parseFloat(invoiceAmount);
+                }
+
+                String paymentAmount = csvRecord.get("Payment Amount");
+                float paymentAmt = 0.0f;
+
+                if(paymentAmount != null && ! paymentAmount.isEmpty()) {
+                    paymentAmt = Float.parseFloat(paymentAmount);
+                }
+
+                String paymentDate =csvRecord.get("Payment Date");
+                Date paymentDt = null;
+
+                if(paymentDate != null && !paymentDate.isEmpty()) {
+                    paymentDt = formatter.parse(paymentDate);
+                }
+
+                String invoiceDate =csvRecord.get("Invoice Date");
+                Date invoiceDt = null;
+
+                if(invoiceDate != null && !invoiceDate.isEmpty()) {
+                    invoiceDt = formatter.parse(invoiceDate);
+                }
 
                 CsvSupplier supplier = CsvSupplier.builder()
                         .supplierId(csvRecord.get("Supplier Id"))
                         .invoiceId(csvRecord.get("Invoice Id"))
-                        .invoiceAmount(Float.parseFloat(csvRecord.get("Invoice Amount")))
+                        .invoiceAmount(invoiceAmt)
                         .terms(Integer.parseInt(csvRecord.get("Terms")))
-                        .paymentAmount(Float.parseFloat(csvRecord.get("Payment Amount")))
-                        .paymentDate(formatter.parse(csvRecord.get("Payment Date")))
-                        .invoiceDate(formatter.parse(csvRecord.get("Invoice Date")))
+                        .paymentAmount(paymentAmt)
+                        .paymentDate(paymentDt)
+                        .invoiceDate(invoiceDt)
                         .build();
 
                 suppliers.add(supplier);

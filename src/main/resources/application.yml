@@ -13,4 +13,7 @@ spring:
         username: the
         password: secretsecret
         driver-class-name: com.mysql.jdbc.Driver
-        platform:
+logging:
+    level:
+        root: debug
+        com.blastingconcept.lsq.the: debug

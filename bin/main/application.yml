@@ -1,0 +1,22 @@
+lsq:
+    the:
+        api:
+            uploadDirectory: files/csv
+
+spring:
+    jpa:
+        hibernate:
+            dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+            ddl-auto: create
+    datasource:
+        url: jdbc:mysql://localhost:3306/lsq?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=America/New_York
+        username: root
+        password: secretsecret
+        driver-class-name: com.mysql.jdbc.Driver
+    #    data: testdata.sql
+        platform:
+    #    name: testdb
+    #    initialization-mode: embedded
+    #test:
+    #    database:
+    #        replace: none

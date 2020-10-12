@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Service
 public class DefaultCsvUploadService implements CsvUploadService {
 
-    private final SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yy", Locale.ENGLISH);
+    private final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
 
     private final SupplierEntityRepository supplierEntityRepository;
 
@@ -36,10 +36,12 @@ public class DefaultCsvUploadService implements CsvUploadService {
     @Override
     public void load(MultipartFile csvFile) {
         try {
-            this.csvToSupplier(csvFile.getInputStream()).stream()
+            List<Supplier> suppliers = this.csvToSupplier(csvFile.getInputStream()).stream()
                     .map(this::mapFromCsvSupplierAndApplyRules)
-                    .collect(Collectors.toList()).stream()
-                    .map(supplier -> this.supplierEntityRepository.save(this.mapFromSupplier(supplier)));
+                    .collect(Collectors.toList());
+
+            suppliers.stream().parallel()
+                    .forEach(supplier -> this.supplierEntityRepository.save(this.mapFromSupplier(supplier)));
 
         } catch (IOException e) {
             throw new RuntimeException("failed to load csv data: " + e.getMessage());
@@ -110,7 +112,7 @@ public class DefaultCsvUploadService implements CsvUploadService {
 
         if(csvSupplier.getPaymentAmount() > 0 && csvSupplier.getInvoiceAmount() > csvSupplier.getPaymentAmount()) {
             invoiceState = InvoiceState.OPEN;
-        } else if (csvSupplier.getInvoiceAmount() >= csvSupplier.getPaymentAmount() &&
+        } else if (csvSupplier.getInvoiceAmount() >= csvSupplier.getPaymentAmount() && csvSupplier.getPaymentDate() != null &&
                 csvSupplier.getPaymentDate().before(new Date())) {
             invoiceState = InvoiceState.CLOSED;
         } else if (csvSupplier.getPaymentAmount() == 0 && csvSupplier.getPaymentDate() == null  &&

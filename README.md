@@ -47,4 +47,4 @@ $ ./gradlew :bootRun
 * [Lombok](https://projectlombok.org/) - Used to generate getters, setters, builders, and loggers
 * [MySQL](https://www.mysql.com/) - For the persistence layer
 * [Apache Commons](https://commons.apache.org/) - For CSV parsing
-* [Docker](https://www.docker.com/) - For container creation and management (though this is TBD)
+* [Docker](https://www.docker.com/) - For container creation and management (though this is TBD)    

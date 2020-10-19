@@ -1,5 +1,6 @@
-package com.blastingconcept.lsq.the.domain.csv;
+package com.blastingconcept.lsq.the.domain.supplier;
 
+import com.blastingconcept.lsq.the.domain.csv.InvoiceState;
 import lombok.*;
 
 import java.util.Date;

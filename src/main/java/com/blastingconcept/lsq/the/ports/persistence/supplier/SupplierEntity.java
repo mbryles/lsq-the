@@ -11,9 +11,9 @@ import java.util.Date;
 
 @Data
 @ToString
-@Builder(toBuilder=true)
+//@Builder(toBuilder=true)
 @NoArgsConstructor
-@AllArgsConstructor
+//@AllArgsConstructor
 @Entity
 @Table(name = "SUPPLIER", schema = "LSQ")
 public class SupplierEntity implements Serializable {
@@ -44,4 +44,5 @@ public class SupplierEntity implements Serializable {
 
     @Column(name = "INVOICE_STATE")
     private String invoiceState;
+
 }

@@ -1,28 +1,27 @@
 package com.blastingconcept.lsq.the.domain.csv.impl;
 
-import com.blastingconcept.lsq.the.domain.csv.CsvSupplier;
-import com.blastingconcept.lsq.the.domain.csv.CsvUploadService;
-import com.blastingconcept.lsq.the.domain.csv.InvoiceState;
-import com.blastingconcept.lsq.the.domain.csv.Supplier;
+import com.blastingconcept.lsq.the.domain.csv.*;
+import com.blastingconcept.lsq.the.domain.supplier.Supplier;
 import com.blastingconcept.lsq.the.ports.persistence.supplier.SupplierEntity;
 import com.blastingconcept.lsq.the.ports.persistence.supplier.SupplierEntityKey;
 import com.blastingconcept.lsq.the.ports.persistence.supplier.SupplierEntityRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityNotFoundException;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class DefaultCsvUploadService implements CsvUploadService {
 
     private final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
@@ -33,15 +32,18 @@ public class DefaultCsvUploadService implements CsvUploadService {
         this.supplierEntityRepository = supplierEntityRepository;
     }
 
+
+    @Transactional
+            (rollbackFor = Exception.class,
+                    noRollbackFor = EntityNotFoundException.class)
     @Override
     public void load(MultipartFile csvFile) {
         try {
-            List<Supplier> suppliers = this.csvToSupplier(csvFile.getInputStream()).stream()
-                    .map(this::mapFromCsvSupplierAndApplyRules)
-                    .collect(Collectors.toList());
-
-            suppliers.stream().parallel()
-                    .forEach(supplier -> this.supplierEntityRepository.save(this.mapFromSupplier(supplier)));
+             this.csvToSupplier(csvFile.getInputStream())
+                     .forEach(csvSupplier -> {
+                        Supplier supplier = this.mapFromCsvSupplierAndApplyRules(csvSupplier);
+                        this.supplierEntityRepository.save(this.mapFromSupplier(supplier));
+                     });
 
         } catch (IOException e) {
             throw new RuntimeException("failed to load csv data: " + e.getMessage());
@@ -56,9 +58,27 @@ public class DefaultCsvUploadService implements CsvUploadService {
 
             List<CsvSupplier> suppliers = new ArrayList<CsvSupplier>();
 
+            Map<SupplierEntityKey,Integer> duplicatesMap = new HashMap<>();
+            Set<CSVRecord> records = new HashSet<>();
+
             Iterable<CSVRecord> csvRecords = csvParser.getRecords();
 
             for (CSVRecord csvRecord : csvRecords) {
+
+                String supplierId = csvRecord.get("Supplier Id");
+                String invoiceId = csvRecord.get("Invoice Id");
+
+                SupplierEntityKey key = SupplierEntityKey.builder()
+                        .supplierId(supplierId)
+                        .invoiceId(invoiceId)
+                        .build();
+
+                Integer i = duplicatesMap.get(key);
+                if(i != null) {
+                    duplicatesMap.put(key, ++i);
+                } else {
+                    duplicatesMap.put(key, 1);
+                }
 
                 String invoiceAmount = csvRecord.get("Invoice Amount");
                 float invoiceAmt = 0.0f;
@@ -98,6 +118,19 @@ public class DefaultCsvUploadService implements CsvUploadService {
                         .build();
 
                 suppliers.add(supplier);
+            }
+
+            log.debug(duplicatesMap.keySet().toString());
+
+            if(duplicatesMap.keySet().size() != suppliers.size()) {
+                log.debug("not good");
+
+                List<SupplierEntityKey> duplicateKeys = duplicatesMap.entrySet().stream()
+                        .filter(supplierEntityKeyIntegerEntry -> supplierEntityKeyIntegerEntry.getValue() > 1)
+                        .map(supplierEntityKeyIntegerEntry -> supplierEntityKeyIntegerEntry.getKey())
+                        .collect(Collectors.toList());
+
+                throw new DuplicateSupplierKeyException("duplicate keys detected", duplicateKeys);
             }
 
             return suppliers;
@@ -142,15 +175,16 @@ public class DefaultCsvUploadService implements CsvUploadService {
                 .invoiceId(supplier.getInvoiceId())
                 .build();
 
-        return SupplierEntity.builder()
-                .id(key)
-                .invoiceAmount(supplier.getInvoiceAmount())
-                .terms(supplier.getTerms())
-                .paymentAmount(supplier.getPaymentAmount())
-                .paymentDate(supplier.getPaymentDate())
-                .invoiceDate(supplier.getInvoiceDate())
-                .invoiceState(supplier.getInvoiceState().name())
-                .build();
+        SupplierEntity supplierEntity = new SupplierEntity();
+        supplierEntity.setId(key);
+        supplierEntity.setInvoiceAmount(supplier.getInvoiceAmount());
+        supplierEntity.setTerms(supplier.getTerms());
+        supplierEntity.setPaymentAmount(supplier.getPaymentAmount());
+        supplierEntity.setPaymentDate(supplier.getPaymentDate());
+        supplierEntity.setInvoiceDate(supplier.getInvoiceDate());
+        supplierEntity.setInvoiceState(supplier.getInvoiceState().name());
+
+        return supplierEntity;
 
     }
 }

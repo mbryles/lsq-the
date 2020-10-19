@@ -1,6 +1,6 @@
 //package com.blastingconcept.lsq.the.ports.persistence.supplier;
 //
-//import com.blastingconcept.lsq.the.domain.csv.Supplier;
+//import com.blastingconcept.lsq.the.domain.supplier.Supplier;
 //import com.wix.mysql.EmbeddedMysql;
 //import com.wix.mysql.config.MysqldConfig;
 ////import org.junit.Before;
